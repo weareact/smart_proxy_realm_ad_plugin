@@ -22,3 +22,10 @@
 
 # Optional:  use the fqdn of the host to generate the computername
 #:computername_use_fqdn: false
+
+# Optional:  customise required character types used in password generation.
+#:password_options:
+#  :include_uppercase: true
+#  :include_lowercase: true
+#  :include_numbers: true
+#  :include_symbols: false

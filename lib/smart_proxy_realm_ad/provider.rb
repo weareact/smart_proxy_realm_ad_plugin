@@ -8,18 +8,19 @@ module Proxy::AdRealm
     include Proxy::Util
     include Proxy::Kerberos
 
-    attr_reader :realm, :keytab_path, :principal, :domain_controller, :domain, :ou, :computername_prefix, :computername_hash, :computername_use_fqdn
+    attr_reader :realm, :keytab_path, :principal, :domain_controller, :domain, :ou, :computername_prefix, :computername_hash, :computername_use_fqdn, :password_options
 
     def initialize(options = {})
-      @realm = options[:realm]
-      @keytab_path = options[:keytab_path]
-      @principal = options[:principal]
-      @domain_controller = options[:domain_controller]
-      @domain = options[:realm].downcase
-      @ou = options[:ou]
-      @computername_prefix = options[:computername_prefix]
-      @computername_hash = options.fetch(:computername_hash, false)
-      @computername_use_fqdn = options.fetch(:computername_use_fqdn, false)
+      @realm                 = options[:realm]
+      @keytab_path           = options[:keytab_path]
+      @principal             = options[:principal]
+      @domain_controller     = options[:domain_controller]
+      @domain                = options[:realm].downcase
+      @ou                    = options[:ou]
+      @computername_prefix   = options[:computername_prefix]
+      @computername_hash     = options[:computername_hash]
+      @computername_use_fqdn = options[:computername_use_fqdn]
+      @password_options      = options[:password_options] || {:include_uppercase => true, :include_lowercase => true, :include_numbers => true, :include_symbols => false}
       logger.info 'Proxy::AdRealm: initialize...'
     end
 
@@ -32,12 +33,12 @@ module Proxy::AdRealm
     end
 
     def create(realm, hostfqdn, params)
-      logger.info "Proxy::AdRealm: create... #{realm}, #{hostfqdn}, #{params}"
+      logger.debug "Proxy::AdRealm: create... #{realm}, #{hostfqdn}, #{params}"
       check_realm(realm)
       kinit_radcli_connect
 
       password = generate_password
-      result = { randompassword: password }
+      result   = {randompassword: password}
 
       computername = hostfqdn_to_computername(hostfqdn)
 
@@ -51,14 +52,12 @@ module Proxy::AdRealm
     end
 
     def delete(realm, hostfqdn)
-      logger.info "Proxy::AdRealm: delete... #{realm}, #{hostfqdn}"
+      logger.debug "Proxy::AdRealm: delete... #{realm}, #{hostfqdn}"
       kinit_radcli_connect
       check_realm(realm)
       computername = hostfqdn_to_computername(hostfqdn)
       radcli_delete(computername)
     end
-
-    private
 
     def hostfqdn_to_computername(hostfqdn)
       computername = hostfqdn
@@ -107,8 +106,18 @@ module Proxy::AdRealm
     end
 
     def generate_password
-      characters = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a
-      Array.new(20) { characters.sample }.join
+      char_types = Array.new
+      char_types.push(%q(-!#$%&()*+,./:;<=>?@[]^_).chars) if @password_options[:include_symbols]
+      char_types.push((0..9).to_a) if @password_options[:include_numbers]
+      char_types.push(('A'..'Z').to_a) if @password_options[:include_uppercase]
+      char_types.push(('a'..'z').to_a) if @password_options[:include_lowercase] or char_types.empty?
+
+      characters = char_types.flatten
+      size       = 20
+
+      arr = char_types.map(&:sample)
+      (size - char_types.size).times {arr << characters.sample}
+      arr.shuffle.join
     end
 
     def radcli_password(computername, password)

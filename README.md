@@ -25,7 +25,6 @@ Then enable this as a realm provider in foreman-proxy
 To enable this realm provider, edit `/etc/foreman-proxy/settings.d/realm.yml` and set:
 
     :enabled: true
-    
     :use_provider: realm_ad
     
 # Building
