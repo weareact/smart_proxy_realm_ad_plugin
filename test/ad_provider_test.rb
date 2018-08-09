@@ -14,7 +14,8 @@ class RealmAdTest < Test::Unit::TestCase
       ou: nil,
       computername_prefix: nil,
       computername_hash: false,
-      computername_use_fqdn: false
+      computername_use_fqdn: false,
+      password_options: {:include_uppercase => true, :include_lowercase => true, :include_numbers => true, :include_symbols => false}
     )
   end
 

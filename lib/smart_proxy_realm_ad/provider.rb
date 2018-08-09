@@ -20,7 +20,7 @@ module Proxy::AdRealm
       @computername_prefix   = options[:computername_prefix]
       @computername_hash     = options[:computername_hash]
       @computername_use_fqdn = options[:computername_use_fqdn]
-      @password_options      = options[:password_options] || {:include_uppercase => true, :include_lowercase => true, :include_numbers => true, :include_symbols => false}
+      @password_options      = options[:password_options]
       logger.info 'Proxy::AdRealm: initialize...'
     end
 
