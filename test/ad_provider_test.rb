@@ -79,6 +79,64 @@ class RealmAdTest < Test::Unit::TestCase
     assert_equal 20, @provider.generate_password.size
   end
 
+  def test_generate_password_returns_password_with_default_character_types_present
+    generated_pass = @provider.generate_password
+    assert_match(/[A-Z]/, generated_pass)
+    assert_match(/[a-z]/, generated_pass)
+    assert_match(/[0-9]/, generated_pass)
+  end
+
+  def test_generate_password_returns_password_with_all_character_types_present
+    provider = Proxy::AdRealm::Provider.new(
+        realm:                 'example.com',
+        keytab_path:           'keytab_path',
+        principal:             'principal',
+        domain_controller:     'domain-controller',
+        ou:                    nil,
+        computername_prefix:   nil,
+        computername_hash:     false,
+        computername_use_fqdn: false,
+        password_options: {:include_uppercase => true, :include_lowercase => true, :include_numbers => true, :include_symbols => true}
+    )
+    generated_pass = provider.generate_password
+    assert_match(/[A-Z]/, generated_pass)
+    assert_match(/[a-z]/, generated_pass)
+    assert_match(/[0-9]/, generated_pass)
+    assert_match(/[-!#$%&()*+,.\/:;<=>?@\[\]^_]/, generated_pass)
+  end
+
+  def test_generate_password_returns_password_with_only_lowercase_character_types_present_when_all_options_false
+    provider       = Proxy::AdRealm::Provider.new(
+        realm:                 'example.com',
+        keytab_path:           'keytab_path',
+        principal:             'principal',
+        domain_controller:     'domain-controller',
+        ou:                    nil,
+        computername_prefix:   nil,
+        computername_hash:     false,
+        computername_use_fqdn: false,
+        password_options:      {:include_uppercase => false, :include_lowercase => false, :include_numbers => false, :include_symbols => false}
+    )
+    generated_pass = provider.generate_password
+    assert_match(/[a-z]{20}/, generated_pass)
+  end
+
+  def test_generate_password_returns_password_with_only_uppercase_and_numbers_character_types_present
+    provider       = Proxy::AdRealm::Provider.new(
+        realm:                 'example.com',
+        keytab_path:           'keytab_path',
+        principal:             'principal',
+        domain_controller:     'domain-controller',
+        ou:                    nil,
+        computername_prefix:   nil,
+        computername_hash:     false,
+        computername_use_fqdn: false,
+        password_options:      {:include_uppercase => true, :include_lowercase => false, :include_numbers => true, :include_symbols => false}
+    )
+    generated_pass = provider.generate_password
+    assert_match(/[A-Z0-9]{20}/, generated_pass)
+  end
+
   def test_apply_computername_prefix_should_return_false_when_prefix_is_nil
     provider = Proxy::AdRealm::Provider.new(computername_prefix: nil, realm: 'example.com')
     assert_false provider.apply_computername_prefix?('host.example.com')

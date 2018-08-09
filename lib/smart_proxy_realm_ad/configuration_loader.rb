@@ -15,7 +15,8 @@ module Proxy::AdRealm
                                         ou: settings[:ou],
                                         computername_prefix: settings[:computername_prefix],
                                         computername_hash: settings[:computername_hash],
-                                        computername_use_fqdn: settings[:computername_use_fqdn]
+                                        computername_use_fqdn: settings[:computername_use_fqdn],
+                                        password_options: settings[:password_options]
                                       )
                                     }
     end
